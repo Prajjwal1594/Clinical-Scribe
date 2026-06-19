@@ -12,6 +12,8 @@ Usage:
 """
 
 import pyttsx3
+import subprocess
+import sys
 from pathlib import Path
 
 MOCK_DATA_DIR = Path(__file__).resolve().parent / "mock_data"
@@ -21,7 +23,7 @@ MOCK_DATA_DIR.mkdir(parents=True, exist_ok=True)
 # (achieved by saving as separate utterances with the engine) help
 # simulate natural conversational gaps for the speaker-labeling
 # heuristic to pick up on.
-CONVERSATION = [
+CONVERSATION_1 = [
     "Good morning, what brings you in today?",
     "Hi doctor, I've had a sore throat and a mild fever since yesterday.",
     "Okay, have you noticed any cough or difficulty swallowing?",
@@ -37,18 +39,81 @@ CONVERSATION = [
     "a follow up visit.",
 ]
 
-OUTPUT_PATH = MOCK_DATA_DIR / "mock_consultation_01.wav"
+# Second conversation: an orthopedic / knee-pain visit.
+CONVERSATION_2 = [
+    "Hello, how can I help you today?",
+    "Hi doctor, I've been having pain in my right knee for the past two weeks.",
+    "Can you describe the pain? Is it sharp, dull, or more of an ache?",
+    "It's a dull ache most of the time, but it gets sharp when I climb stairs.",
+    "Have you had any recent injuries or started any new physical activities?",
+    "I started jogging again about a month ago after a long break.",
+    "That could be contributing. Any swelling or stiffness in the morning?",
+    "A little swelling in the evening, but no morning stiffness.",
+    "Let me examine the knee. Does it hurt when I press here?",
+    "Yes, right there on the inner side is quite tender.",
+    "It looks like you may have mild patellofemoral syndrome. I'd recommend "
+    "reducing your running for now and doing some quad strengthening exercises.",
+    "Should I be worried about long term damage?",
+    "Not at this stage. If the pain doesn't improve in three to four weeks, "
+    "we can order an MRI to rule out any cartilage issues.",
+    "Thank you, doctor. I'll follow your advice.",
+]
+
+CONVERSATION_3 = [
+    "Good morning, what brings you in today?",
+    "Hi Doctor, I am having headache since five days.",
+    "I see. Is the pain mild, moderate or severe?",
+    "Moderately severe",
+    "Any associated symptoms like nausea vomiting or sensitivity to light?",
+    "No",
+    "Are you having any fever?",
+    "Yes",
+    "Any visual disturbances or neck stiffness?",
+    "No",
+    "Have you had any head injury recently?",
+    "No",
+    "Are you taking any medications currently?",
+    "Yes, I am taking Metformin for diabetes.",
+    "And you mentioned a fever. How high has it been?",
+    "Around 101 Fahrenheit.",
+    "Any chills or body aches?",
+    "Yes, body aches.",
+    "I think it's best to get a CBC and a chest X-ray to rule out infection.",
+    "Sure, doctor."
+]
+
+CONVERSATIONS = [
+    ("mock_consultation_01.wav", CONVERSATION_1),
+    ("mock_consultation_02.wav", CONVERSATION_2),
+    ("mock_consultation_03.wav", CONVERSATION_3),   
+]
+
+
+def _generate_single(index: int):
+    """Generate a single audio file (called in a subprocess)."""
+    filename, conversation = CONVERSATIONS[index]
+    engine = pyttsx3.init()
+    engine.setProperty("rate", 165)
+    output_path = MOCK_DATA_DIR / filename
+    full_script = " ... ".join(conversation)
+    engine.save_to_file(full_script, str(output_path))
+    engine.runAndWait()
+    print(f"Mock audio saved to: {output_path}")
 
 
 def generate():
-    engine = pyttsx3.init()
-    engine.setProperty("rate", 165)
-
-    full_script = " ... ".join(CONVERSATION)
-    engine.save_to_file(full_script, str(OUTPUT_PATH))
-    engine.runAndWait()
-    print(f"Mock audio saved to: {OUTPUT_PATH}")
+    """Generate all mock audio files, each in its own subprocess
+    to work around the pyttsx3 SAPI5 hang-on-reuse bug on Windows."""
+    for i in range(len(CONVERSATIONS)):
+        subprocess.run(
+            [sys.executable, __file__, "--single", str(i)],
+            check=True,
+        )
 
 
 if __name__ == "__main__":
-    generate()
+    if "--single" in sys.argv:
+        idx = int(sys.argv[sys.argv.index("--single") + 1])
+        _generate_single(idx)
+    else:
+        generate()
