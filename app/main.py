@@ -7,7 +7,11 @@ Run locally with:
 Then visit http://127.0.0.1:8000/docs for interactive Swagger UI.
 """
 
+import logging
+
 from fastapi import FastAPI
+
+logger = logging.getLogger(__name__)
 
 from app.routers import audio
 from app.services.asr_service import asr_service
@@ -48,6 +52,7 @@ async def health_check():
 
 @app.on_event("startup")
 async def startup_event():
-    print("Ambient Clinical Scribe API starting up...")
-    print(f"Whisper model configured: {WHISPER_MODEL_SIZE}")
-    print("Model will load lazily on first transcription request.")
+    logging.basicConfig(level=logging.INFO)
+    logger.info("Ambient Clinical Scribe API starting up...")
+    logger.info("Whisper model configured: %s", WHISPER_MODEL_SIZE)
+    logger.info("Model will load lazily on first transcription request.")

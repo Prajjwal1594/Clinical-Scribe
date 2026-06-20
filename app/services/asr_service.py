@@ -14,8 +14,11 @@ in a Week 1 MVP. A note on the upgrade path to pyannote.audio for
 true acoustic diarization is included in the README.
 """
 
+import logging
 from pathlib import Path
 from typing import List
+
+logger = logging.getLogger(__name__)
 
 from faster_whisper import WhisperModel
 
@@ -38,11 +41,11 @@ class ASRService:
         """Loads the Whisper model into memory if not already loaded.
         Lazy loading avoids slow startup time on every server reload."""
         if self._model is None:
-            print(f"[ASRService] Loading Whisper model: {self.model_size} ...")
+            logger.info("Loading Whisper model: %s ...", self.model_size)
             self._model = WhisperModel(
                 self.model_size, device="cpu", compute_type="int8"
             )
-            print("[ASRService] Whisper model loaded.")
+            logger.info("Whisper model loaded successfully.")
         return self._model
 
     @property
@@ -106,7 +109,7 @@ class ASRService:
             if previous_end_time is not None:
                 gap = start - previous_end_time
                 if gap >= SPEAKER_TURN_GAP_THRESHOLD:
-                    current_speaker_idx = 1 - current_speaker_idx  # flip 0/1
+                    current_speaker_idx = (current_speaker_idx + 1) % len(SPEAKER_LABELS)
 
             labeled.append(
                 TranscriptSegment(

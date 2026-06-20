@@ -30,10 +30,12 @@ class TranscriptionResponse(BaseModel):
 
 
 class HealthCheckResponse(BaseModel):
+    """Response returned by the health check endpoint to verify system status."""
     status: str
     whisper_model_loaded: bool
     model_size: str
 
 
 class ErrorResponse(BaseModel):
+    """Standardized error response format for API failures."""
     detail: str
