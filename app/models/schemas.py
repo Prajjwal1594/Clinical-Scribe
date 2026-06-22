@@ -39,3 +39,10 @@ class HealthCheckResponse(BaseModel):
 class ErrorResponse(BaseModel):
     """Standardized error response format for API failures."""
     detail: str
+
+
+class AudioStatsResponse(BaseModel):
+    """Summary statistics about available audio files and storage."""
+    mock_file_count: int = Field(..., description="Number of mock audio files available")
+    upload_dir_exists: bool = Field(..., description="Whether the uploads directory exists")
+    supported_formats: List[str] = Field(..., description="List of supported audio extensions")

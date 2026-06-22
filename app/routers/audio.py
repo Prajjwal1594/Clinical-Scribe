@@ -8,6 +8,8 @@ Exposes:
                                     files bundled for local testing
   POST /audio/transcribe-mock/{filename} -> transcribe one of the
                                     bundled mock files by name
+  GET  /audio/stats             -> summary statistics about audio
+                                    files and storage
 """
 
 import shutil
@@ -22,7 +24,7 @@ from app.config import (
     ALLOWED_AUDIO_EXTENSIONS,
     MAX_UPLOAD_SIZE_BYTES,
 )
-from app.models.schemas import TranscriptionResponse
+from app.models.schemas import TranscriptionResponse, AudioStatsResponse
 from app.services.asr_service import asr_service
 
 router = APIRouter(prefix="/audio", tags=["Audio Ingestion"])
@@ -95,6 +97,21 @@ async def list_mock_files():
         if f.suffix.lower() in ALLOWED_AUDIO_EXTENSIONS
     ]
     return {"mock_files": files, "count": len(files)}
+
+
+@router.get("/stats", response_model=AudioStatsResponse)
+async def audio_stats():
+    """Returns summary statistics about available audio files,
+    upload directory status, and supported formats."""
+    mock_files = [
+        f for f in MOCK_DATA_DIR.iterdir()
+        if f.suffix.lower() in ALLOWED_AUDIO_EXTENSIONS
+    ]
+    return AudioStatsResponse(
+        mock_file_count=len(mock_files),
+        upload_dir_exists=UPLOAD_DIR.exists(),
+        supported_formats=sorted(ALLOWED_AUDIO_EXTENSIONS),
+    )
 
 
 @router.post("/transcribe-mock/{filename}", response_model=TranscriptionResponse)
