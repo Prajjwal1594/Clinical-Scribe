@@ -40,3 +40,23 @@ SPEAKER_LABELS = ["Doctor", "Patient"]
 # better than longer thresholds, but it's still a heuristic: rapid
 # interruptions or same-speaker pauses longer than this will mislabel.
 SPEAKER_TURN_GAP_THRESHOLD = 0.4
+
+# ---------------------------------------------------------------------------
+# Week 2: LLM settings for SOAP note generation
+# ---------------------------------------------------------------------------
+
+# Google Gemini API key (required for SOAP note generation).
+# Get a free key at https://aistudio.google.com
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
+
+# LLM model to use for SOAP synthesis.
+# "gemini-2.0-flash" is fast, capable, and free-tier friendly.
+LLM_MODEL_NAME = os.getenv("LLM_MODEL_NAME", "gemini-2.0-flash")
+
+# Low temperature for clinical accuracy — we want deterministic,
+# medically precise output, not creative writing.
+LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.1"))
+
+# Number of retries if the LLM returns malformed JSON that doesn't
+# pass Pydantic validation.
+LLM_MAX_RETRIES = int(os.getenv("LLM_MAX_RETRIES", "2"))
