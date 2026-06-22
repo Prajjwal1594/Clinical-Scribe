@@ -118,7 +118,22 @@ async def audio_stats():
 async def transcribe_mock_file(filename: str):
     """Transcribes a mock audio file already present in mock_data/ by
     filename, useful for quick local testing/demos."""
-    target = MOCK_DATA_DIR / filename
+    # Security: reject path traversal attempts (e.g. "../../etc/passwd")
+    if "/" in filename or "\\" in filename or ".." in filename:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid filename. Directory traversal is not allowed.",
+        )
+
+    target = (MOCK_DATA_DIR / filename).resolve()
+
+    # Double-check the resolved path is still inside mock_data/
+    if not str(target).startswith(str(MOCK_DATA_DIR.resolve())):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid filename. Path escapes the mock data directory.",
+        )
+
     if not target.exists():
         raise HTTPException(
             status_code=404,
